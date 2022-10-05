@@ -1,0 +1,97 @@
+Parameters:
+  RootDomainName:
+    Description: Domain name for your website (example.com)
+    Type: String
+Mappings:
+  RegionMap:
+    us-east-1:
+      S3hostedzoneID: Z3AQBSTGFYJSTF
+      S3AliasTarget: s3-website-us-east-1.amazonaws.com
+    us-east-2:
+      S3hostedzoneID: Z2O1EMRO9K5GLX
+      S3AliasTarget: s3-website.us-east-2.amazonaws.com
+    us-west-1:
+      S3hostedzoneID: Z2F56UZL2M1ACD
+      S3AliasTarget: s3-website-us-west-1.amazonaws.com
+    us-west-2:
+      S3hostedzoneID: Z3BJ6K6RIION7M
+      S3AliasTarget: s3-website-us-west-2.amazonaws.com
+    ca-central-1:
+      S3hostedzoneID: Z1QDHH18159H29 
+      S3AliasTarget: s3-website.ca-central-1.amazonaws.com
+    ap-south-1:
+      S3hostedzoneID: Z11RGJOFQNVJUP
+      S3AliasTarget: s3-website.ap-south-1.amazonaws.com
+    ap-northeast-2:
+      S3hostedzoneID: Z3W03O7B5YMIYP
+      S3AliasTarget: s3-website.ap-northeast-2.amazonaws.com
+    ap-southeast-1:
+      S3hostedzoneID: Z3O0J2DXBE1FTB
+      S3AliasTarget: s3-website-ap-southeast-1.amazonaws.com
+    ap-southeast-2:
+      S3hostedzoneID: Z1WCIGYICN2BYD
+      S3AliasTarget: s3-website-ap-southeast-2.amazonaws.com
+    ap-northeast-1:
+      S3hostedzoneID: Z2M4EHUR26P7ZW
+      S3AliasTarget: s3-website-ap-northeast-1.amazonaws.com
+    eu-central-1:
+      S3hostedzoneID: Z21DNDUVLTQW6Q
+      S3AliasTarget: s3-website.eu-central-1.amazonaws.com
+    eu-west-1:
+      S3hostedzoneID: Z1BKCTXD74EZPE
+      S3AliasTarget: s3-website-eu-west-1.amazonaws.com
+    eu-west-2:
+      S3hostedzoneID: Z3GKZC51ZF0DB4
+      S3AliasTarget: s3-website.eu-west-2.amazonaws.com
+    sa-east-1:
+      S3hostedzoneID: Z31GFT0UA1I2HV
+      S3AliasTarget: s3-website-sa-east-1.amazonaws.com
+
+Resources:
+
+  RootBucket:
+    Type: AWS::S3::Bucket
+    Properties:
+      BucketName: !Ref RootDomainName
+      AccessControl: PublicRead
+      WebsiteConfiguration:
+        IndexDocument: index.html
+        ErrorDocument: 404.html
+
+  WWWBucket:
+    Type: AWS::S3::Bucket
+    Properties:
+      BucketName: !Sub
+          - www.${Domain}
+          - Domain: !Ref RootDomainName
+      AccessControl: BucketOwnerFullControl
+      WebsiteConfiguration:
+        RedirectAllRequestsTo:
+          HostName: !Ref RootBucket
+
+  MyDNS:
+    Type: AWS::Route53::RecordSetGroup
+    Properties:
+      HostedZoneName: !Sub 
+          - ${Domain}.
+          - Domain: !Ref RootDomainName
+      Comment: Zone apex alias.
+      RecordSets:
+      - 
+        Name: !Ref RootDomainName
+        Type: A
+        AliasTarget:
+          HostedZoneId: !FindInMap [ RegionMap, !Ref 'AWS::Region', S3hostedzoneID]
+          DNSName: !FindInMap [ RegionMap, !Ref 'AWS::Region', websiteendpoint]
+      -
+        Name: !Sub
+            - www.${Domain}
+            - Domain: !Ref RootDomainName
+        Type: CNAME
+        TTL: 900
+        ResourceRecords:
+        - !GetAtt WWWBucket.DomainName
+Outputs:
+  WebsiteURL:
+    Value: !GetAtt RootBucket.WebsiteURL
+    Description: URL for website hosted on S3
