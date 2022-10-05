@@ -2,6 +2,10 @@ Parameters:
   RootDomainName:
     Description: Domain name for your website (example.com)
     Type: String
+  NotionURL:
+    Description: Web-link URL of your Notion site.(except https://)
+    Type: String
+
 Mappings:
   RegionMap:
     us-east-1:
@@ -55,8 +59,10 @@ Resources:
       BucketName: !Ref RootDomainName
       AccessControl: PublicRead
       WebsiteConfiguration:
-        IndexDocument: index.html
-        ErrorDocument: 404.html
+        RedirectAllRequestsTo:
+          HostName: !Ref NotionURL
+          Protocol: https
+    DeletionPolicy: Delete
 
   WWWBucket:
     Type: AWS::S3::Bucket
@@ -64,10 +70,36 @@ Resources:
       BucketName: !Sub
           - www.${Domain}
           - Domain: !Ref RootDomainName
-      AccessControl: BucketOwnerFullControl
+      AccessControl: PublicRead 
       WebsiteConfiguration:
         RedirectAllRequestsTo:
-          HostName: !Ref RootBucket
+          HostName: !Ref RootDomainName
+          Protocol: http
+    DeletionPolicy: Delete
+
+  RootBucketPolicy:
+    Type: AWS::S3::BucketPolicy
+    Properties:
+      Bucket: !Ref RootBucket
+      PolicyDocument:
+        Version: "2012-10-17"
+        Statement:
+          Effect: Allow
+          Principal: "*"
+          Action: s3:GetObject
+          Resource: !Sub arn:${AWS::Partition}:s3:::${RootBucket}/*
+
+  WWWBucketPolicy:
+    Type: AWS::S3::BucketPolicy
+    Properties:
+      Bucket: !Ref WWWBucket
+      PolicyDocument:
+        Version: "2012-10-17"
+        Statement:
+          Effect: Allow
+          Principal: "*"
+          Action: s3:GetObject
+          Resource: !Sub arn:${AWS::Partition}:s3:::${WWWBucket}/*
 
   MyDNS:
     Type: AWS::Route53::RecordSetGroup
@@ -87,10 +119,10 @@ Resources:
         Name: !Sub
             - www.${Domain}
             - Domain: !Ref RootDomainName
-        Type: CNAME
-        TTL: 900
-        ResourceRecords:
-        - !GetAtt WWWBucket.DomainName
+        Type: A
+        AliasTarget:
+          HostedZoneId: !FindInMap [ RegionMap, !Ref 'AWS::Region', S3hostedzoneID]
+          DNSName: !FindInMap [ RegionMap, !Ref 'AWS::Region', websiteendpoint]
 Outputs:
   WebsiteURL:
     Value: !GetAtt RootBucket.WebsiteURL
