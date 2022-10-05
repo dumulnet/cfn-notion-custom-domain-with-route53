@@ -23,7 +23,7 @@ To deploy the solution, you use [AWS CloudFormation](https://aws.amazon.com/clou
 
 1. Click the **Launch on AWS** button to open the solution in the CloudFormation console.
 
-    [![Launch the Amazon CloudFront secure static website with CloudFormation](./docs/images/deploy-to-aws.png)](https://console.aws.amazon.com/cloudformation/home?region=us-east-1#/stacks/new?stackName=amazon-cloudfront-secure-static-site-templates-main&templateURL=https://s3.amazonaws.com/solution-builders-us-east-1/amazon-cloudfront-secure-static-site/latest/main.yaml)
+    [![Launch the Amazon CloudFront secure static website with CloudFormation](./docs/images/deploy-to-aws.png)](https://console.aws.amazon.com/cloudformation/home?region=us-east-1#/stacks/new?stackName=amazon-cloudfront-secure-static-site-templates-main&templateURL=)
 
 2. If necessary, sign in with your AWS account credentials.
 3. You should see a **Create stack** page, with pre-populated fields that specify the CloudFormation template. Choose the **Next** button at the bottom of the page.
@@ -32,6 +32,9 @@ To deploy the solution, you use [AWS CloudFormation](https://aws.amazon.com/clou
 
     - **RootDomainName:** Your registered domain name, such as example.com. This domain must be pointed to a Route 53 hosted zone.
     - **NotionURL** The Notion web link url containing the domain being used.
+
+
+![Parameters](./docs/images/deploy-params.png)
 
    After entering values, choose the **Next** button.
 5. On the **Configure stack options** page, you can optionally [add tags and other stack options](https://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/cfn-console-add-tags.html). When finished, choose the **Next** button.
@@ -48,7 +51,7 @@ To deploy the solution, you use [AWS CloudFormation](https://aws.amazon.com/clou
 
 ### Download the CloudFormation template
 
-To download the CloudFormation template to deploy on your own, go to: [Download](repo/blob/main/main.yml)
+To download the CloudFormation template to deploy on your own, go to: [Download](main/main.yml)
 
 
 
